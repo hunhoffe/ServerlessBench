@@ -68,7 +68,7 @@ sudo apt-get install maven nodejs jq\
                      gcc-7 g++-7 protobuf-compiler libprotobuf-dev \
                      libcrypto++-dev libcap-dev \
                      libncurses5-dev libboost-dev libssl-dev autopoint help2man \
-                     libhiredis-dev texinfo automake libtool pkg-config python3-boto3
+                     libhiredis-dev texinfo automake libtool pkg-config python3-boto3 npm
 ```
 
 **It's strongly recommended to use Ubuntu 17.04 or newer**
