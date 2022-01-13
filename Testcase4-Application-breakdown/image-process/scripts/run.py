@@ -19,17 +19,23 @@ import sys, getopt
 def client(i,results,loopTimes):
     print("client %d start" %i)
     IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
+
     command = "%s/scripts/run-single.sh -R -t " %(IMAGE_PROCESS_HOME) + str(loopTimes)
+    print("\tAbout to run command: " + command)
     r = os.popen(command)  
-    text = r.read()  
+    text = r.read()
+    print("\tResult: " + text)
     results[i] = text
     print("client %d finished" %i)
 
 def warmup(i,warmupTimes):
+    print("client %d warmup start (%d iters)" %i %warmupTimes)
     for j in range(warmupTimes):
         IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
-        r = os.popen("%s/scripts/action_invoke.sh" %IMAGE_PROCESS_HOME)  
-        text = r.read() 
+        r = os.popen("%s/scripts/action_invoke.sh" %IMAGE_PROCESS_HOME)
+        print("\t%d) command: %s/scripts/action_invoke.sh" %j %IMAGE_PROCESS_HOME)
+        text = r.read()
+        print("\t  result: %s" %text)
     print("client %d warmup finished" %i) 
 
 def main():
@@ -39,10 +45,14 @@ def main():
     warmupTimes = argv[2]
     threads = []
     
+    print("About to run " + str(clientNum) + " clients, " + str(loopTimes) + " loops, " + str(warmupTimes) + " warmups")
+
     containerName = "java8action"
 
+    print("Deleting all existing Openwhisk action pods")
     r = os.popen("kubectl delete pods -l user-action-pod -n openwhisk")
-    r.read()
+    text = r.read()
+    print("result: " + text)
 
     # First: warm up
     for i in range(clientNum):
@@ -53,7 +63,8 @@ def main():
         threads[i].start()
 
     for i in range(clientNum):
-        threads[i].join()    
+        threads[i].join()
+
     print("Warm up complete")
     # Second: invoke the actions
     # Initialize the results and the clients
@@ -101,6 +112,10 @@ def main():
     formatResult(latencies,maxEndTime - minInvokeTime, clientNum, loopTimes, warmupTimes)
 
 def parseResult(result):
+    print("==== Parsing result: ====")
+    print(result)
+    print("=========================")
+
     lines = result.split('\n')
     parsedResults = []
     for line in lines:
@@ -113,6 +128,7 @@ def parseResult(result):
         while count < 2:
             while i < len(line):
                 if line[i].isdigit():
+                    print("Added time: " + line[i:i+13])
                     parsedTimes[count] = line[i:i+13]
                     i += 13
                     count += 1
@@ -143,9 +159,16 @@ def getargv():
     return (int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]))
 
 def formatResult(latencies,duration,client,loop,warmup):
+    # Total number of latencies, should be equal to loop + warmup
     requestNum = len(latencies)
+    print("format: requestNum = " + str(requestNum) + ", loop = " + str(loop) + ", warmup = " + str(warmup)) 
+    
+    # sort the latencies
     latencies.sort()
+
+    # Duration is total time for all latencies - but includes time/overhead between function calls
     duration = float(duration)
+
     # calculate the average latency
     total = 0
     for latency in latencies:

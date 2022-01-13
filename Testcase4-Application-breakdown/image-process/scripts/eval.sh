@@ -23,14 +23,18 @@ cd $SCRIPTS_DIR/../
 
 result=$(pwd)/eval-result.log
 rm -f $result 
+echo "Attempted to remove old result at $result"
 
 echo "1. measuring cold-invoke..."
+echo "$ $SCRIPTS_DIR/run-single.sh -m cold -t $cold_loop -r $result"
 $SCRIPTS_DIR/run-single.sh -m cold -t $cold_loop -r $result
 
 echo "2. measuring warm-inovke..."
+echo "$ $SCRIPTS_DIR/run-single.sh -m warm -t $warm_loop -w $warm_warmup -r $result"
 $SCRIPTS_DIR/run-single.sh -m warm -t $warm_loop -w $warm_warmup -r $result
 
 echo "3. measuring concurrent invoking..."
+echo "$ python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop $concurrent_warmup"
 python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop $concurrent_warmup
 
 echo "image-process application running result: "

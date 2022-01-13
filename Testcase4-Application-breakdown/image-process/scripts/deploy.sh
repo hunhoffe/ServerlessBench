@@ -18,6 +18,7 @@ fi
 source $TESTCASE4_HOME/local.env
 
 couchdb_url=http://$COUCHDB_USERNAME:$COUCHDB_PASSWORD@$COUCHDB_IP:$COUCHDB_PORT
+echo "couchdb_url is: $couchdb_url"
 
 # deploy.sh should be executed in parent dir of src
 # ASSET_DIR=$(pwd)/assets

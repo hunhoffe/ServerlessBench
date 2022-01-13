@@ -13,6 +13,12 @@ import sys
 
 # check: albumID field
 inputArgs = sys.argv[1:]
+
+print("In checkInvoker.py:")
+print("==== inputArgs ====")
+print(inputArgs)
+print("===================")
+
 for line in inputArgs:
     if line.find('albumID') != -1:
         sys.exit(0)
