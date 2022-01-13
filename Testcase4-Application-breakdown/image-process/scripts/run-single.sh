@@ -79,11 +79,14 @@ while getopts "r:m:t:w:lWR" OPT; do
             echo "Error: contradictory arguments"
             exit
         fi
-        # If there's no paused container, the mode should not be supported
-        if [[ -z `docker ps | grep $IMAGENAME | awk {'print $1'}` ]];then
-            echo "Error: could not find paused containers of the action"
-            exit
-        fi
+	# If there's no existing pods, the mode should not be supported
+        for action in extractImageMetadata transformMetadata handler thumbnail storeImageMetadata
+        do
+            if [[ -z `kubectl get pods -n openwhisk | grep $action | awk {'print $1'}` ]];then
+                echo "Error: could not find action pod for action $action"
+                exit
+            fi
+        done
         echo "Run only mode"
         RUNONLY=true
         ;;
