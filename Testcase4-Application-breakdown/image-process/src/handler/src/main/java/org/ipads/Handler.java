@@ -31,80 +31,55 @@ public class Handler {
         long currentTime = System.currentTimeMillis();
         
         System.out.println(" Handler invoked");
-        System.out.println(args.toString());
-        
+
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
         
-        System.out.println(" Handler fetching start times");
-        
         JsonArray startTimes = args.getAsJsonArray("startTimes");
-        
-        System.out.println(" Handler fetched start times");
-        
         startTimes.add(entry_time);
-
         JsonObject response = args;
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
-        if(couchdb_url == null) {
+        if(couchdb_url == null || couchdb_url.isEmpty()) {
             System.out.println("ExtractImageMetadata: missing COUCHDB_URL");
             return response;
         }
         String couchdb_username = args.get("COUCHDB_USERNAME").getAsString();
-        if(couchdb_username == null) {
+        if(couchdb_username == null || couchdb_username.isEmpty()) {
             System.out.println("ExtractImageMetadata: missing COUCHDB_USERNAME");
             return response;
         }
         String couchdb_password = args.get("COUCHDB_PASSWORD").getAsString();
-        if(couchdb_password == null) {
+        if(couchdb_password == null || couchdb_password.isEmpty()) {
             System.out.println("ExtractImageMetadata: missing COUCHDB_PASSWORD");
             return response;
         }
         String couchdb_log_dbname = args.get("COUCHDB_LOGDB").getAsString();
-        if(couchdb_log_dbname == null) {
+        if(couchdb_log_dbname == null || couchdb_log_dbname.isEmpty()) {
             System.out.println("ExtractImageMetadata: missing COUCHDB_LOGDB");
             return response;
         }
 
-
         response.add("startTimes", startTimes);
-
-        System.out.println(" Handler fetching comm times");
-        
         JsonArray commTimes = args.getAsJsonArray("commTimes");
-        
-        System.out.println(" Handler fetched comm times");
-        
         commTimes.add(0);
         response.add("commTimes", commTimes);
 
         // Multiple logs are expected in retry cases
-        try {
-            System.out.println("Key: " + ImageProcessCommons.IMAGE_NAME);
-            String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
-            System.out.println("Image name: " + imageName);
-            Database db = ClientBuilder.url(new URL(couchdb_url))
-                    .username(couchdb_username)
-                    .password(couchdb_password)
-                    .build().database(couchdb_log_dbname, true);
+        String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
+        Database db = ClientBuilder.url(new URL(couchdb_url))
+                .username(couchdb_username)
+                .password(couchdb_password)
+                .build().database(couchdb_log_dbname, true);
 
-            System.out.println("Got access to DB");
-            JsonObject log = new JsonObject();
-            String logid = Long.toString(System.nanoTime());
-            log.addProperty("_id", logid);
-            log.addProperty("img", imageName);
-            db.save(log);
-            System.out.println("Saved log to DB");
+        JsonObject log = new JsonObject();
+        String logid = Long.toString(System.nanoTime());
+        log.addProperty("_id", logid);
+        log.addProperty("img", imageName);
+        db.save(log);
 
-            response.addProperty("log", logid);
+        response.addProperty("log", logid);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        System.out.println(" Handler completed");
-        
         return response;
     }
 
