@@ -38,23 +38,19 @@ public class ExtractImageMetadata {
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
         if(couchdb_url == null || couchdb_url.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_URL");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_URL: " + args.toString());
         }
         String couchdb_username = args.get("COUCHDB_USERNAME").getAsString();
         if(couchdb_username == null || couchdb_username.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_USERNAME");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_USERNAME: " + args.toString());
         }
         String couchdb_password = args.get("COUCHDB_PASSWORD").getAsString();
         if(couchdb_password == null || couchdb_password.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_PASSWORD");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_PASSWORD: " + args.toString());
         }
         String couchdb_dbname = args.get("COUCHDB_DBNAME").getAsString();
         if(couchdb_dbname == null || couchdb_dbname.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_DBNAME");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_DBNAME: " + args.toString());
         }
 
         Date date = new Date(currentTime);
