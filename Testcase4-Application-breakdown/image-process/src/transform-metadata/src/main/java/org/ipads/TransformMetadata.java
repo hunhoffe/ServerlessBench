@@ -46,6 +46,7 @@ public class TransformMetadata {
         System.out.println("TransformMetadata - started");
         args = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA);
         System.out.println("TransformMetadata - got EXTRACTED_METADATA");
+        Objects.isNull(args);
         System.out.println(args.toString());
 
         if (args.has("Properties:exif:DateTimeOriginal")) {
