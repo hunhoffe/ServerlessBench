@@ -31,6 +31,7 @@ public class Handler {
         long currentTime = System.currentTimeMillis();
         
         System.out.println(" Handler invoked");
+        System.out.println(args.toString());
         
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
@@ -80,17 +81,21 @@ public class Handler {
 
         // Multiple logs are expected in retry cases
         try {
+            System.out.println("Key: " + ImageProcessCommons.IMAGE_NAME);
             String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
+            System.out.println("Image name: " + imageName);
             Database db = ClientBuilder.url(new URL(couchdb_url))
                     .username(couchdb_username)
                     .password(couchdb_password)
                     .build().database(couchdb_log_dbname, true);
 
+            System.out.println("Got access to DB");
             JsonObject log = new JsonObject();
             String logid = Long.toString(System.nanoTime());
             log.addProperty("_id", logid);
             log.addProperty("img", imageName);
             db.save(log);
+            System.out.println("Saved log to DB");
 
             response.addProperty("log", logid);
 
