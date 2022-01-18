@@ -43,7 +43,10 @@ public class TransformMetadata {
         commTimes.add(0);
         ret.add("commTimes", commTimes);
 
+        System.out.println("TransformMetadata - started");
         args = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA);
+        System.out.println("TransformMetadata - got EXTRACTED_METADATA");
+        System.out.println(args.toString());
 
         if (args.has("Properties:exif:DateTimeOriginal")) {
             response.add("creationTime", args.get("Properties:exif:DateTimeOriginal"));
