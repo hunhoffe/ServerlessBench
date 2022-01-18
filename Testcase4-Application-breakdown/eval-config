@@ -1,3 +1,4 @@
 concurrent_client=5
 concurrent_loop=5
 record_num=0
+delay_sec=2

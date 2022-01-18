@@ -26,8 +26,8 @@ rm -f $result
 echo "Attempted to remove old result at $result"
 
 echo "3. measuring concurrent invoking..."
-echo "$ python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop"
-python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop
+echo "$ python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop $delay_sec"
+python3 $SCRIPTS_DIR/run.py $concurrent_client $concurrent_loop $delay_sec
 
 echo "image-process application running result: "
 cat $result

@@ -16,24 +16,41 @@ import sys, getopt
 
 # this script should be executed in parent dir of scripts
 
-def client(i,results,loopTimes):
-    print("client %d start" %i)
+def client(i,single_results):
     IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
-
-    command = "%s/scripts/run-single.sh -t " %(IMAGE_PROCESS_HOME) + str(loopTimes)
-    print("\tAbout to run command: " + command)
+    command = "%s/scripts/run-single.sh -t 1" % (IMAGE_PROCESS_HOME)
     r = os.popen(command)  
     text = r.read()
-    print("\tResult: " + text)
-    results[i] = text
+    single_results[i] = text
+ 
+def looping_client(i,results,loopTimes,delaySec):
+    print("client %d start" %i)
+    threads = []
+    single_results = []
+
+    for j in range(loopTimes):
+        t = threading.Thread(target=client, args=(j,single_results))
+        threads.append(t)
+        single_results.append("")
+
+    for j in range(loopTimes):
+        print("client %d started %d" % (i,j))
+        threads[j].start()
+        time.sleep(delaySec)
+
+    for j in range(loopTimes):
+        threads[j].join()
+
+    results[i] = "\n".join(single_results)
     print("client %d finished" %i)
 
 def main():
     argv = getargv()
     clientNum = argv[0]
     loopTimes = argv[1]
-    
-    print("About to run " + str(clientNum) + " clients, " + str(loopTimes) + " loops")
+    delaySec = argv[2]
+
+    print("About to run %d clients, %d loops, %f delay" % (clientNum, loopTimes, delaySec))
 
     # Second: invoke the actions
     # Initialize the results and the clients
@@ -45,7 +62,7 @@ def main():
 
     # Create the clients
     for i in range(clientNum):
-        t = threading.Thread(target=client,args=(i,results,loopTimes))
+        t = threading.Thread(target=looping_client,args=(i,results,loopTimes,delaySec))
         threads.append(t)
 
     # start the clients
@@ -98,20 +115,19 @@ def parseResult(result):
                     i += 13
                     count += 1
                     continue
-                i += 1
-        
+                i += 1 
         parsedResults.append(parsedTimes)
     return parsedResults
 
 def getargv():
-    if len(sys.argv) != 3:
-        print("Usage: python3 run.py <client number> <loop times>")
+    if len(sys.argv) != 4:
+        print("Usage: python3 run.py <client number> <loop times> <delay sec>")
         exit(0)
-    if not str.isdigit(sys.argv[1]) or not str.isdigit(sys.argv[2]) or int(sys.argv[1]) < 1 or int(sys.argv[2]) < 1:
-        print("Usage: python3 run.py <client number> <loop times>")
-        print("Client number and loop times must be an positive integer")
+    if not str.isdigit(sys.argv[1]) or not str.isdigit(sys.argv[2]) or not sys.argv[3].replace('.','',1).isdigit() or int(sys.argv[1]) < 1 or int(sys.argv[2]) < 1 or float(sys.argv[3]) < 0.0:
+        print("Usage: python3 run.py <client number> <loop times> <delay sec>")
+        print("Client number, loop times, and delay seconds must be an positive integer")
         exit(0)
-    return (int(sys.argv[1]),int(sys.argv[2]),1)
+    return (int(sys.argv[1]),int(sys.argv[2]),float(sys.argv[3]))
 
 
 def formatResult(latencies,duration,client,loop):
