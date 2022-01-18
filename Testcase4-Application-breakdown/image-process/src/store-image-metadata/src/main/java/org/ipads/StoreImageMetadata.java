@@ -35,77 +35,65 @@ public class StoreImageMetadata {
         JsonObject originalObj = new JsonObject();
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
-        if(couchdb_url == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_URL");
-            return originalObj;
+        if(couchdb_url == null || couchdb_url.isEmpty()) {
+            throw new Exception("StoreImageMetadata: missing COUCHDB_URL " + args.toString());
         }
         String couchdb_username = args.get("COUCHDB_USERNAME").getAsString();
-        if(couchdb_username == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_USERNAME");
-            return originalObj;
+        if(couchdb_username == null || couchdb_username.isEmpty()) {
+            throw new Exception("StoreImageMetadata: missing COUCHDB_USERNAME " + args.toString());
         }
         String couchdb_password = args.get("COUCHDB_PASSWORD").getAsString();
-        if(couchdb_password == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_PASSWORD");
-            return originalObj;
+        if(couchdb_password == null || couchdb_password.isEmpty()) {
+            throw new Exception("StoreImageMetadata: missing COUCHDB_PASSWORD " + args.toString());
         }
         String couchdb_dbname = args.get("COUCHDB_DBNAME").getAsString();
-        if(couchdb_dbname == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_DBNAME");
-            return originalObj;
+        if(couchdb_dbname == null || couchdb_dbname.isEmpty()) {
+            throw new Exception("StoreImageMetadata: missing COUCHDB_DBNAME " + args.toString());
         }
 
         JsonObject extractedMetadata = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA);
-        try {
-            long db_begin = System.currentTimeMillis();
-            Database db = ClientBuilder.url(new URL(couchdb_url))
-                    .username(couchdb_username)
-                    .password(couchdb_password)
-                    .build().database(couchdb_dbname, true);
+        long db_begin = System.currentTimeMillis();
+        Database db = ClientBuilder.url(new URL(couchdb_url))
+                .username(couchdb_username)
+                .password(couchdb_password)
+                .build().database(couchdb_dbname, true);
 
-            //originalObj = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
-            originalObj = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
-            long db_finish = System.currentTimeMillis();
-            long db_elapse_ms = db_finish - db_begin;
+        //originalObj = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
+        originalObj = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
+        long db_finish = System.currentTimeMillis();
+        long db_elapse_ms = db_finish - db_begin;
 
-            originalObj.add("startTimes", startTimes);
-            JsonArray commTimes = args.getAsJsonArray("commTimes");
-            commTimes.add(db_elapse_ms);
-            originalObj.add("commTimes", commTimes);
+        originalObj.add("startTimes", startTimes);
+        JsonArray commTimes = args.getAsJsonArray("commTimes");
+        commTimes.add(db_elapse_ms);
+        originalObj.add("commTimes", commTimes);
             
-            originalObj.addProperty("uploadTime", System.currentTimeMillis());
-            originalObj.add("imageFormat", extractedMetadata.get("format"));
-            originalObj.add("dimensions", extractedMetadata.get("dimensions"));
-            originalObj.add("fileSize", extractedMetadata.get("fileSize"));
-            originalObj.addProperty("userID", couchdb_username);
-            originalObj.addProperty("albumID", couchdb_dbname);
+        originalObj.addProperty("uploadTime", System.currentTimeMillis());
+        originalObj.add("imageFormat", extractedMetadata.get("format"));
+        originalObj.add("dimensions", extractedMetadata.get("dimensions"));
+        originalObj.add("fileSize", extractedMetadata.get("fileSize"));
+        originalObj.addProperty("userID", couchdb_username);
+        originalObj.addProperty("albumID", couchdb_dbname);
 
-            System.out.println(extractedMetadata);
-
-            if (extractedMetadata.has("geo")) {
-                originalObj.add("latitude", extractedMetadata.getAsJsonObject("geo").get("latitude"));
-                originalObj.add("longtitude", extractedMetadata.getAsJsonObject("geo").get("longitude"));
-            }
-
-            if (extractedMetadata.has("exifMake")) {
-                originalObj.add("exifMake", extractedMetadata.get("exifMake"));
-            }
-
-            if (extractedMetadata.has("exifModel")) {
-                originalObj.add("exifModel", extractedMetadata.get("exifModel"));
-            }
-
-            if (args.has(ImageProcessCommons.THUMBNAIL)) {
-                originalObj.add("thumbnail", args.get(ImageProcessCommons.THUMBNAIL));
-            }
-            //db.update(originalObj);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (extractedMetadata.has("geo")) {
+            originalObj.add("latitude", extractedMetadata.getAsJsonObject("geo").get("latitude"));
+            originalObj.add("longtitude", extractedMetadata.getAsJsonObject("geo").get("longitude"));
         }
+
+        if (extractedMetadata.has("exifMake")) {
+            originalObj.add("exifMake", extractedMetadata.get("exifMake"));
+        }
+
+        if (extractedMetadata.has("exifModel")) {
+            originalObj.add("exifModel", extractedMetadata.get("exifModel"));
+        }
+
+        if (args.has(ImageProcessCommons.THUMBNAIL)) {
+            originalObj.add("thumbnail", args.get(ImageProcessCommons.THUMBNAIL));
+        }
+        
         System.out.println(originalObj);
         return originalObj;
-
     }
 
     public static void main(String args[]) {
