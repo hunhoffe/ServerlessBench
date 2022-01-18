@@ -29,7 +29,7 @@ def client(i,results,loopTimes):
     print("client %d finished" %i)
 
 def warmup(i,warmupTimes):
-    print("client %d warmup start (%d iters)" %i %warmupTimes)
+    print("client " + str(i) + " warmup start (" + str(warmupTimes) + " iters)")
     for j in range(warmupTimes):
         IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
         r = os.popen("%s/scripts/action_invoke.sh" %IMAGE_PROCESS_HOME)
