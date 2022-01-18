@@ -47,76 +47,67 @@ public class Thumbnail {
         JsonObject response = args;
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
-        if(couchdb_url == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_URL");
-            return response;
+        if(couchdb_url == null || couchdb_url.isEmpty()) {
+            throw new Exception("Thumbnail: missing COUCHDB_URL " + args.toString());
         }
         String couchdb_username = args.get("COUCHDB_USERNAME").getAsString();
-        if(couchdb_username == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_USERNAME");
-            return response;
+        if(couchdb_username == null || couchdb_username.isEmpty()) {
+            throw new Exception("Thumbnail: missing COUCHDB_USERNAME " + args.toString());
         }
         String couchdb_password = args.get("COUCHDB_PASSWORD").getAsString();
-        if(couchdb_password == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_PASSWORD");
-            return response;
+        if(couchdb_password == null || couchdb_password.isEmpty()) {
+            throw new Exception("Thumbnail: missing COUCHDB_PASSWORD " + args.toString());
         }
         String couchdb_dbname = args.get("COUCHDB_DBNAME").getAsString();
-        if(couchdb_dbname == null) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_DBNAME");
-            return response;
+        if(couchdb_dbname == null || couchdb_dbname.isEmpty()) {
+            throw new Exception("Thumbnail: missing COUCHDB_DBNAME " + args.toString());
         }
 
         response.add("startTimes", startTimes);
 
-        try {
-            String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
+        String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
 
-            long db_begin = System.currentTimeMillis();
-            Database db = ClientBuilder.url(new URL(couchdb_url))
-                    .username(couchdb_username)
-                    .password(couchdb_password)
-                    .build().database(couchdb_dbname, true);
-            InputStream imageStream = db.getAttachment("doc-test", imageName);
-            long db_finish = System.currentTimeMillis();
-            long db_elapse_ms = db_finish - db_begin;
+        long db_begin = System.currentTimeMillis();
+        Database db = ClientBuilder.url(new URL(couchdb_url))
+                .username(couchdb_username)
+                .password(couchdb_password)
+                .build().database(couchdb_dbname, true);
+        InputStream imageStream = db.getAttachment("doc-test", imageName);
+        long db_finish = System.currentTimeMillis();
+        long db_elapse_ms = db_finish - db_begin;
 
-            JsonArray commTimes = args.getAsJsonArray("commTimes");
-            commTimes.add(db_elapse_ms);
-            response.add("commTimes", commTimes);
+        JsonArray commTimes = args.getAsJsonArray("commTimes");
+        commTimes.add(db_elapse_ms);
+        response.add("commTimes", commTimes);
 
-            FileOutputStream outputStream = new FileOutputStream(imageName);
-            IOUtils.copy(imageStream, outputStream);
-            JsonObject size = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA)
-                    .getAsJsonObject("dimensions");
-            int width = size.get("width").getAsInt();
-            int height = size.get("height").getAsInt();
+        FileOutputStream outputStream = new FileOutputStream(imageName);
+        IOUtils.copy(imageStream, outputStream);
+        JsonObject size = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA)
+                .getAsJsonObject("dimensions");
+        int width = size.get("width").getAsInt();
+        int height = size.get("height").getAsInt();
 
-            float scalingFactor = Math.min(MAX_HEIGHT/ height, MAX_WIDTH / width);
-            width = (int) (width * scalingFactor);
-            height = (int) (height * scalingFactor);
+        float scalingFactor = Math.min(MAX_HEIGHT/ height, MAX_WIDTH / width);
+        width = (int) (width * scalingFactor);
+        height = (int) (height * scalingFactor);
 
-            String thumbnailName = "thumbnail-" + imageName;
-            ConvertCmd cmd = new ConvertCmd();
-            IMOperation op = new IMOperation();
-            op.addImage(imageName);
-            op.resize(width, height);
-            op.addImage(thumbnailName);
-            cmd.run(op);
+        String thumbnailName = "thumbnail-" + imageName;
+        ConvertCmd cmd = new ConvertCmd();
+        IMOperation op = new IMOperation();
+        op.addImage(imageName);
+        op.resize(width, height);
+        op.addImage(thumbnailName);
+        cmd.run(op);
 
-            imageStream = new FileInputStream(thumbnailName);
-            //JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
-            JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
-            db.saveAttachment(imageStream, thumbnailName,
-                    args.get(ImageProcessCommons.EXTRACTED_METADATA).getAsJsonObject().get("format").getAsString(),
-                    doc.get("_id").getAsString(),
-                    doc.get("_rev").getAsString());
+        imageStream = new FileInputStream(thumbnailName);
+        //JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
+        JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
+        db.saveAttachment(imageStream, thumbnailName,
+                args.get(ImageProcessCommons.EXTRACTED_METADATA).getAsJsonObject().get("format").getAsString(),
+                doc.get("_id").getAsString(),
+                doc.get("_rev").getAsString());
 
-            response.addProperty(ImageProcessCommons.THUMBNAIL, thumbnailName);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        response.addProperty(ImageProcessCommons.THUMBNAIL, thumbnailName);
 
         long endTime = System.nanoTime();
         long executionTime = endTime - Thumbnail.LAUNCH_TIME;
