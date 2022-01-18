@@ -41,23 +41,19 @@ public class Handler {
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
         if(couchdb_url == null || couchdb_url.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_URL");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_URL: " + args.toString());
         }
         String couchdb_username = args.get("COUCHDB_USERNAME").getAsString();
         if(couchdb_username == null || couchdb_username.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_USERNAME");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_USERNAME: " + args.toString());
         }
         String couchdb_password = args.get("COUCHDB_PASSWORD").getAsString();
         if(couchdb_password == null || couchdb_password.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_PASSWORD");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_PASSWORD: " + args.toString());
         }
         String couchdb_log_dbname = args.get("COUCHDB_LOGDB").getAsString();
         if(couchdb_log_dbname == null || couchdb_log_dbname.isEmpty()) {
-            System.out.println("ExtractImageMetadata: missing COUCHDB_LOGDB");
-            return response;
+            throw new Exception("ExtractImageMetadata: missing COUCHDB_LOGDB: " + args.toString());
         }
 
         response.add("startTimes", startTimes);
