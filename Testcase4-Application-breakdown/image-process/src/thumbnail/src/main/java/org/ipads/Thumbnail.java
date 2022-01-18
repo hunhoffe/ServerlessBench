@@ -12,8 +12,10 @@
 
 package org.serverlessbench;
 
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.Database;
+import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -66,23 +68,27 @@ public class Thumbnail {
         response.add("startTimes", startTimes);
 
         String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
+        FileOutputStream outputStream = new FileOutputStream(imageName);
 
         long db_begin = System.currentTimeMillis();
-        Database db = ClientBuilder.url(new URL(couchdb_url))
-                .username(couchdb_username)
-                .password(couchdb_password)
-                .build().database(couchdb_dbname, true);
-        InputStream imageStream = db.getAttachment("doc-test", imageName);
-        long db_finish = System.currentTimeMillis();
+        try {
+	    Database db = ClientBuilder.url(new URL(couchdb_url))
+                    .username(couchdb_username)
+                    .password(couchdb_password)
+                    .build().database(couchdb_dbname, true);
+            InputStream imageStream = db.getAttachment("doc-test", imageName);
+            IOUtils.copy(imageStream, outputStream);
+	    imageStream.close();
+	} catch (CouchDbException e) {
+            System.err.println("Database failure");
+            e.printStackTrace();
+        }
+	long db_finish = System.currentTimeMillis();
         long db_elapse_ms = db_finish - db_begin;
 
-        JsonArray commTimes = args.getAsJsonArray("commTimes");
-        commTimes.add(db_elapse_ms);
-        response.add("commTimes", commTimes);
+	outputStream.close();
 
-        FileOutputStream outputStream = new FileOutputStream(imageName);
-        IOUtils.copy(imageStream, outputStream);
-        JsonObject size = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA)
+	JsonObject size = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA)
                 .getAsJsonObject("dimensions");
         int width = size.get("width").getAsInt();
         int height = size.get("height").getAsInt();
@@ -99,15 +105,34 @@ public class Thumbnail {
         op.addImage(thumbnailName);
         cmd.run(op);
 
-        imageStream = new FileInputStream(thumbnailName);
-        //JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
-        JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
-        db.saveAttachment(imageStream, thumbnailName,
-                args.get(ImageProcessCommons.EXTRACTED_METADATA).getAsJsonObject().get("format").getAsString(),
-                doc.get("_id").getAsString(),
-                doc.get("_rev").getAsString());
+        InputStream imageStream = new FileInputStream(thumbnailName);
+	db_begin = System.currentTimeMillis();
+        try {
+	    Database db = ClientBuilder.url(new URL(couchdb_url))
+                    .username(couchdb_username)
+                    .password(couchdb_password)
+                    .build().database(couchdb_dbname, true);
+	    JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
+	    db.saveAttachment(imageStream, thumbnailName,
+            	    args.get(ImageProcessCommons.EXTRACTED_METADATA).getAsJsonObject().get("format").getAsString(),
+                    doc.get("_id").getAsString(),
+                    doc.get("_rev").getAsString());
+	} catch (DocumentConflictException e) {
+            System.err.println("Document Conflict Exception when writing thumbnail; ignoring...");
+	} catch (CouchDbException e) {
+            System.err.println("Database failure");
+            e.printStackTrace();
+        }
+	db_finish = System.currentTimeMillis();
+        db_elapse_ms += db_finish - db_begin;
+
+        imageStream.close();
 
         response.addProperty(ImageProcessCommons.THUMBNAIL, thumbnailName);
+   
+        JsonArray commTimes = args.getAsJsonArray("commTimes");
+        commTimes.add(db_elapse_ms);
+        response.add("commTimes", commTimes);
 
         long endTime = System.nanoTime();
         long executionTime = endTime - Thumbnail.LAUNCH_TIME;

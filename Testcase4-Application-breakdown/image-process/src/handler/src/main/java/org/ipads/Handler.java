@@ -12,6 +12,7 @@
 
 package org.serverlessbench;
 
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.Database;
 import com.google.gson.JsonArray;
@@ -58,22 +59,30 @@ public class Handler {
 
         response.add("startTimes", startTimes);
         JsonArray commTimes = args.getAsJsonArray("commTimes");
-        commTimes.add(0);
-        response.add("commTimes", commTimes);
 
-        // Multiple logs are expected in retry cases
         String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
-        Database db = ClientBuilder.url(new URL(couchdb_url))
-                .username(couchdb_username)
-                .password(couchdb_password)
-                .build().database(couchdb_log_dbname, true);
-
         JsonObject log = new JsonObject();
         String logid = Long.toString(System.nanoTime());
         log.addProperty("_id", logid);
         log.addProperty("img", imageName);
-        db.save(log);
 
+        long db_begin = System.currentTimeMillis();	
+	try {
+            // Multiple logs are expected in retry cases
+            Database db = ClientBuilder.url(new URL(couchdb_url))
+                    .username(couchdb_username)
+                    .password(couchdb_password)
+                    .build().database(couchdb_log_dbname, true);
+            db.save(log);
+        } catch (CouchDbException e) {
+	    System.err.println("Database failure");
+	    e.printStackTrace();
+	}
+	long db_finish = System.currentTimeMillis();
+	long db_elapse_ms = db_finish - db_begin;
+
+        commTimes.add(db_elapse_ms);
+        response.add("commTimes", commTimes);
         response.addProperty("log", logid);
 
         return response;

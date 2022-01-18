@@ -1,7 +1,3 @@
-cold_loop=3
-warm_loop=10
-warm_warmup=3
-concurrent_client=3
-concurrent_loop=3
-concurrent_warmup=3
-record_num=10
+concurrent_client=5
+concurrent_loop=5
+record_num=0

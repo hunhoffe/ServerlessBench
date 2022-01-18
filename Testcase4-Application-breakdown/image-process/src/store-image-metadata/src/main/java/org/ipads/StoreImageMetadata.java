@@ -11,7 +11,7 @@
  */
 
 package org.serverlessbench;
-
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.Database;
 import com.google.gson.JsonArray;
@@ -53,13 +53,16 @@ public class StoreImageMetadata {
 
         JsonObject extractedMetadata = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA);
         long db_begin = System.currentTimeMillis();
-        Database db = ClientBuilder.url(new URL(couchdb_url))
-                .username(couchdb_username)
-                .password(couchdb_password)
-                .build().database(couchdb_dbname, true);
-
-        //originalObj = ImageProcessCommons.findJsonObjectFromDb(db, args.get(ImageProcessCommons.IMAGE_NAME).getAsString());
-        originalObj = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
+	try {
+            Database db = ClientBuilder.url(new URL(couchdb_url))
+                    .username(couchdb_username)
+                    .password(couchdb_password)
+                    .build().database(couchdb_dbname, true);
+            originalObj = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
+	} catch (CouchDbException e) {
+            System.err.println("Database failure");
+            e.printStackTrace();
+        }
         long db_finish = System.currentTimeMillis();
         long db_elapse_ms = db_finish - db_begin;
 
@@ -91,8 +94,6 @@ public class StoreImageMetadata {
         if (args.has(ImageProcessCommons.THUMBNAIL)) {
             originalObj.add("thumbnail", args.get(ImageProcessCommons.THUMBNAIL));
         }
-        
-        System.out.println(originalObj);
         return originalObj;
     }
 

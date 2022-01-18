@@ -11,6 +11,7 @@
  */
 
 package org.serverlessbench;
+import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.Database;
 import com.google.gson.Gson;
@@ -60,23 +61,30 @@ public class ExtractImageMetadata {
 
         response.add("startTimes", startTimes);
 
-        String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
-        
+        String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString(); 
+        FileOutputStream outputStream = new FileOutputStream(imageName);
+       
         long db_begin = System.currentTimeMillis();
-        Database db = ClientBuilder.url(new URL(couchdb_url))
-                .username(couchdb_username)
-                .password(couchdb_password)
-                .build().database(couchdb_dbname, true);
-        InputStream imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
-        long db_finish = System.currentTimeMillis();
+	try {
+            Database db = ClientBuilder.url(new URL(couchdb_url))
+                    .username(couchdb_username)
+                    .password(couchdb_password)
+                    .build().database(couchdb_dbname, true);
+            InputStream imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
+            IOUtils.copy(imageStream, outputStream);
+	    imageStream.close();
+        } catch (CouchDbException e) {
+            System.err.println("Database failure");
+            e.printStackTrace();
+        }
+	long db_finish = System.currentTimeMillis();
         long db_elapse_ms = db_finish - db_begin;
 
         JsonArray commTimes = new JsonArray();
         commTimes.add(db_elapse_ms);
         response.add("commTimes", commTimes);
 
-        FileOutputStream outputStream = new FileOutputStream(imageName);
-        IOUtils.copy(imageStream, outputStream);
+	outputStream.close();
         Info imageInfo = new Info(imageName, false);
         response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
         response.add(ImageProcessCommons.EXTRACTED_METADATA, new  Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes"));

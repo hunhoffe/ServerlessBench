@@ -30,6 +30,11 @@ public class ImageProcessCommons {
     public static final String EXECUTION_TIME = "executionTime";
 
     public static JsonObject findJsonObjectFromDb(Database db, String id) throws IOException {
-        return new JsonParser().parse(new InputStreamReader(db.find(id))).getAsJsonObject();
+        InputStream inputStream = db.find(id);
+	InputStreamReader reader = new InputStreamReader(inputStream);
+        JsonObject myObj = new JsonParser().parse(reader).getAsJsonObject();
+	reader.close();
+	inputStream.close();
+	return myObj;
     }
 }

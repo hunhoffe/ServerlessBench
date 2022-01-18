@@ -17,6 +17,5 @@ fi
 
 ASSETS_DIR="$TESTCASE4_HOME/image-process/assets"
 pushd $ASSETS_DIR >/dev/null 2>&1
-echo "Invoking imageProcessSequence (blocking) with imageName=test.jpg"
 wsk action invoke imageProcessSequence -i --result --param imageName test.jpg
 popd >/dev/null 2>&1

@@ -15,29 +15,15 @@ SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $SCRIPTS_DIR/../
 
 ACTIONNAME=imageProcessSequence
-IMAGENAME=java8action
-
 PRINTLOG=false
-WARMUPONLY=false
-RUNONLY=false
-while getopts "r:m:t:w:lWR" OPT; do
+
+while getopts "r:t:l" OPT; do
     case $OPT in
     # result file
     r)
         RESULT=$OPTARG
         ;;
-    
-    # Mode: cold or warm.
-    m)
-        MODE=$OPTARG
-        if [[ $MODE != 'cold' && $MODE != 'warm' ]] ;then
-            echo "usage: "
-            echo "run-single.sh -m <mode> -t <loop times> -w <warm ups>"
-            echo 'mode: warm, cold'
-            exit
-        fi
-        ;;
-    
+
     # The loop time
     t)
         TIMES=$OPTARG
@@ -47,92 +33,18 @@ while getopts "r:m:t:w:lWR" OPT; do
             exit
         fi
         ;;
-    
-    # The warm up times
-    w)
-        WARMUP=$OPTARG
-        expr $WARMUP + 0 &>/dev/null
-        if [[ $? != 0 ]] || [[ $WARMUP -lt 1 ]]; then
-            echo "Error: warm up times must be a positive integer"
-            exit
-        fi
-        ;;
 
     # Output the results to the log with this argument.
     l)
         PRINTLOG=true
         ;;
 
-    # "Warm up only" with this argument: warm up and then exit with no output.
-    W)
-        if [[ $RUNONLY = true || $MODE = "cold" ]]; then
-            echo "Error: contradictory arguments"
-            exit
-        fi
-        echo "Warm up only mode."
-        WARMUPONLY=true
-        ;;
-    
-    # "Run only" with this argument: invoke the first action without warm up. Paused containers are needed.
-    R)
-        if [[ $WARMUPONLY = true ]]; then
-            echo "Error: contradictory arguments"
-            exit
-        fi
-	# If there's no existing pods, the mode should not be supported
-        for action in extractImageMetadata transformMetadata handler thumbnail storeImageMetadata
-        do
-            if [[ -z `kubectl get pods -n openwhisk | grep $action | awk {'print $1'}` ]];then
-                echo "Error: could not find action pod for action $action"
-                exit
-            fi
-        done
-        echo "Run only mode"
-        RUNONLY=true
-        ;;
     ?)
         echo "unknown arguments"
     esac
 done
 
-if [[ -z $MODE ]];then
-    echo "default mode: warm"
-    MODE="warm"
-fi
-
-if [[ -z $TIMES && $WARMUPONLY = false ]]; then
-    if [ $MODE = "warm" ];then
-        echo "default warm loop times: 10"
-        TIMES=10
-    else
-        echo "default cold loop times: 3"
-        TIMES=3
-    fi
-fi
-
-if [[ $MODE = "warm" ]] && [[ -z $WARMUP ]] && [[ $RUNONLY = false ]]; then
-    echo "default warm up times: 1"
-    WARMUP=1
-fi
-
-# mode = warm: kill all the running containers and then warm up
-if [[ $MODE = "warm" && $RUNONLY = false ]]; then
-    echo "Warm up.."
-    kubectl delete pods -l user-action-pod -n openwhisk
-    for i in $(seq 1 $WARMUP)
-    do
-        echo "The $i-th warmup..."
-        $SCRIPTS_DIR/action_invoke.sh > /dev/null
-    done
-    echo "Warm up complete"
-    if [[ $WARMUPONLY = true ]]; then
-        echo "No real action is needed."
-        exit
-    fi
-fi
-
-
-LOGFILE=$ACTIONNAME-$MODE.csv
+LOGFILE=$ACTIONNAME.csv
 
 if [[ $PRINTLOG = true && ! -e $LOGFILE ]]; then
     echo logfile:$LOGFILE
@@ -143,13 +55,6 @@ LATENCYSUM=0
 
 for i in $(seq 1 $TIMES)
 do
-    if [[ $MODE = 'cold' ]]; then
-        echo 'Delete all user action pods...'
-	kubectl delete pods -l user-action-pod -n openwhisk
-    fi
-
-    echo Measure $MODE start up time: no.$i
-   
     oldIFS="$IFS" 
     invokeTime=`date +%s%3N`
     IFS=$'\n' output=( $($SCRIPTS_DIR/action_invoke.sh) )
@@ -201,7 +106,7 @@ fi
 # output to result file
 if [ ! -z $RESULT ]; then
     echo -e "\n\n------------------ (single)result ---------------------" >> $RESULT
-    echo "mode: $MODE, loop_times: $TIMES, warmup_times: $WARMUP" >> $RESULT
+    echo "mode: $MODE, loop_times: $TIMES" >> $RESULT
     echo "Successful invocations: ${#LATENCIES[@]} / $TIMES" >> $RESULT
     echo "Latency (ms):" >> $RESULT
     echo -e "Avg\t50%\t75%\t90%\t95%\t99%\t" >> $RESULT

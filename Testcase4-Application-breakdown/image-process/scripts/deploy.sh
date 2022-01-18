@@ -38,7 +38,7 @@ fi
 java -cp upload-image/target/upload-image.jar org.serverlessbench.UploadImage $image test.jpg $couchdb_url $COUCHDB_USERNAME $COUCHDB_PASSWORD $IMAGE_DATABASE
 
 echo "3. uploading functions to OpenWhisk..."
-wsk action update extractImageMetadata extract-image-metadata/target/extract-image-metadata.jar --main org.serverlessbench.ExtractImageMetadata --docker dplsming/java8action-imagemagic-profile -i \
+wsk action update extractImageMetadata extract-image-metadata/target/extract-image-metadata.jar --main org.serverlessbench.ExtractImageMetadata --docker hunhoffe/java8action-imagemagic -i \
     --param COUCHDB_URL "$couchdb_url" \
     --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
     --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
@@ -52,7 +52,7 @@ wsk action update handler handler/target/handler.jar --main org.serverlessbench.
     --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
     --param COUCHDB_LOGDB "$IMAGE_DATABASE_LOG"
 
-wsk action update thumbnail thumbnail/target/thumbnail.jar --main org.serverlessbench.Thumbnail --docker openwhisk/java8action -i \
+wsk action update thumbnail thumbnail/target/thumbnail.jar --main org.serverlessbench.Thumbnail --docker hunhoffe/java8action-imagemagic -i \
     --param COUCHDB_URL "$couchdb_url" \
     --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
     --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \

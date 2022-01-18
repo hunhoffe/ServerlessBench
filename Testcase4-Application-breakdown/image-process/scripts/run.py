@@ -20,7 +20,7 @@ def client(i,results,loopTimes):
     print("client %d start" %i)
     IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
 
-    command = "%s/scripts/run-single.sh -R -t " %(IMAGE_PROCESS_HOME) + str(loopTimes)
+    command = "%s/scripts/run-single.sh -t " %(IMAGE_PROCESS_HOME) + str(loopTimes)
     print("\tAbout to run command: " + command)
     r = os.popen(command)  
     text = r.read()
@@ -28,44 +28,13 @@ def client(i,results,loopTimes):
     results[i] = text
     print("client %d finished" %i)
 
-def warmup(i,warmupTimes):
-    print("client " + str(i) + " warmup start (" + str(warmupTimes) + " iters)")
-    for j in range(warmupTimes):
-        IMAGE_PROCESS_HOME=os.environ['TESTCASE4_HOME'] + "/image-process"
-        r = os.popen("%s/scripts/action_invoke.sh" %IMAGE_PROCESS_HOME)
-        print("\t%d) command: %s/scripts/action_invoke.sh" %j %IMAGE_PROCESS_HOME)
-        text = r.read()
-        print("\t  result: %s" %text)
-    print("client %d warmup finished" %i) 
-
 def main():
     argv = getargv()
     clientNum = argv[0]
     loopTimes = argv[1]
-    warmupTimes = argv[2]
-    threads = []
     
-    print("About to run " + str(clientNum) + " clients, " + str(loopTimes) + " loops, " + str(warmupTimes) + " warmups")
+    print("About to run " + str(clientNum) + " clients, " + str(loopTimes) + " loops")
 
-    containerName = "java8action"
-
-    print("Deleting all existing Openwhisk action pods")
-    r = os.popen("kubectl delete pods -l user-action-pod -n openwhisk")
-    text = r.read()
-    print("result: " + text)
-
-    # First: warm up
-    for i in range(clientNum):
-        t = threading.Thread(target=warmup,args=(i,warmupTimes))
-        threads.append(t)
-
-    for i in range(clientNum):
-        threads[i].start()
-
-    for i in range(clientNum):
-        threads[i].join()
-
-    print("Warm up complete")
     # Second: invoke the actions
     # Initialize the results and the clients
     threads = []
@@ -83,6 +52,7 @@ def main():
     for i in range(clientNum):
         threads[i].start()
 
+    # wait for the clients to complete
     for i in range(clientNum):
         threads[i].join()
 
@@ -109,13 +79,9 @@ def main():
             if int(clientResult[j][-1]) > maxEndTime:
                 maxEndTime = int(clientResult[j][-1])
 
-    formatResult(latencies,maxEndTime - minInvokeTime, clientNum, loopTimes, warmupTimes)
+    formatResult(latencies,maxEndTime - minInvokeTime, clientNum, loopTimes)
 
 def parseResult(result):
-    print("==== Parsing result: ====")
-    print(result)
-    print("=========================")
-
     lines = result.split('\n')
     parsedResults = []
     for line in lines:
@@ -128,7 +94,6 @@ def parseResult(result):
         while count < 2:
             while i < len(line):
                 if line[i].isdigit():
-                    print("Added time: " + line[i:i+13])
                     parsedTimes[count] = line[i:i+13]
                     i += 13
                     count += 1
@@ -139,29 +104,18 @@ def parseResult(result):
     return parsedResults
 
 def getargv():
-    if len(sys.argv) != 3 and len(sys.argv) != 4:
-        print("Usage: python3 run.py <client number> <loop times> [<warm up times>]")
+    if len(sys.argv) != 3:
+        print("Usage: python3 run.py <client number> <loop times>")
         exit(0)
     if not str.isdigit(sys.argv[1]) or not str.isdigit(sys.argv[2]) or int(sys.argv[1]) < 1 or int(sys.argv[2]) < 1:
-        print("Usage: python3 run.py <client number> <loop times> [<warm up times>]")
+        print("Usage: python3 run.py <client number> <loop times>")
         print("Client number and loop times must be an positive integer")
         exit(0)
-    
-    if len(sys.argv) == 4:
-        if not str.isdigit(sys.argv[3]) or int(sys.argv[3]) < 1:
-            print("Usage: python3 run.py <client number> <loop times> [<warm up times>]")
-            print("Warm up times must be an positive integer")
-            exit(0)
+    return (int(sys.argv[1]),int(sys.argv[2]),1)
 
-    else:
-        return (int(sys.argv[1]),int(sys.argv[2]),1)
 
-    return (int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3]))
-
-def formatResult(latencies,duration,client,loop,warmup):
-    # Total number of latencies, should be equal to loop + warmup
+def formatResult(latencies,duration,client,loop):
     requestNum = len(latencies)
-    print("format: requestNum = " + str(requestNum) + ", loop = " + str(loop) + ", warmup = " + str(warmup)) 
     
     # sort the latencies
     latencies.sort()
@@ -189,7 +143,7 @@ def formatResult(latencies,duration,client,loop,warmup):
     # output result to file
     resultfile = open("eval-result.log","a")
     resultfile.write("\n\n------------------ (concurrent)result ---------------------\n") 
-    resultfile.write("client: %d, loop_times: %d, warmup_times: %d\n" % (client, loop, warmup))
+    resultfile.write("client: %d, loop_times: %d\n" % (client, loop))
     resultfile.write("%s / %d requests finished in %.2f seconds\n" %(requestNum, (loop * client), (duration/1000)))
     resultfile.write("latency (ms):\navg\t50%\t75%\t90%\t95%\t99%\n")
     if requestNum > 0:
