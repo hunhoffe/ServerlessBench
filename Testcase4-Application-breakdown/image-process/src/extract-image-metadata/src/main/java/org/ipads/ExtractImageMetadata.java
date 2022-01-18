@@ -34,7 +34,6 @@ public class ExtractImageMetadata {
         long currentTime = System.currentTimeMillis();
 
         System.out.println(" ExtractImageMetadata invoked");
-
         JsonObject response = args;
 
         String couchdb_url = args.get("COUCHDB_URL").getAsString();
@@ -66,28 +65,26 @@ public class ExtractImageMetadata {
         response.add("startTimes", startTimes);
 
         String imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
-        try {
-            long db_begin = System.currentTimeMillis();
-            Database db = ClientBuilder.url(new URL(couchdb_url))
-                    .username(couchdb_username)
-                    .password(couchdb_password)
-                    .build().database(couchdb_dbname, true);
-            InputStream imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
-            long db_finish = System.currentTimeMillis();
-            long db_elapse_ms = db_finish - db_begin;
+        
+        long db_begin = System.currentTimeMillis();
+        Database db = ClientBuilder.url(new URL(couchdb_url))
+                .username(couchdb_username)
+                .password(couchdb_password)
+                .build().database(couchdb_dbname, true);
+        InputStream imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
+        long db_finish = System.currentTimeMillis();
+        long db_elapse_ms = db_finish - db_begin;
 
-            JsonArray commTimes = new JsonArray();
-            commTimes.add(db_elapse_ms);
-            response.add("commTimes", commTimes);
+        JsonArray commTimes = new JsonArray();
+        commTimes.add(db_elapse_ms);
+        response.add("commTimes", commTimes);
 
-            FileOutputStream outputStream = new FileOutputStream(imageName);
-            IOUtils.copy(imageStream, outputStream);
-            Info imageInfo = new Info(imageName, false);
-            response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
-            response.add(ImageProcessCommons.EXTRACTED_METADATA, new  Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        FileOutputStream outputStream = new FileOutputStream(imageName);
+        IOUtils.copy(imageStream, outputStream);
+        Info imageInfo = new Info(imageName, false);
+        response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
+        response.add(ImageProcessCommons.EXTRACTED_METADATA, new  Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes"));
+
         return response;
     }
 
