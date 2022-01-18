@@ -26,7 +26,6 @@ public class TransformMetadata {
         long currentTime = System.currentTimeMillis();
 
         System.out.println("TransformMetadata invoked");
-        System.out.println(args.toString());
 
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
@@ -43,11 +42,7 @@ public class TransformMetadata {
         commTimes.add(0);
         ret.add("commTimes", commTimes);
 
-        System.out.println("TransformMetadata - started");
         args = args.getAsJsonObject(ImageProcessCommons.EXTRACTED_METADATA);
-        System.out.println("TransformMetadata - got EXTRACTED_METADATA");
-        Objects.isNull(args);
-        System.out.println(args.toString());
 
         if (args.has("Properties:exif:DateTimeOriginal")) {
             response.add("creationTime", args.get("Properties:exif:DateTimeOriginal"));
