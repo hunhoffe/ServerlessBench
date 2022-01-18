@@ -27,11 +27,20 @@ public class Handler {
     final static float MAX_WIDTH = 250;
     final static float MAX_HEIGHT= 250;
 
-    public static JsonObject main(JsonObject args) {
+    public static JsonObject main(JsonObject args) {      
         long currentTime = System.currentTimeMillis();
+        
+        System.out.println(" Handler invoked");
+        
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
+        
+        System.out.println(" Handler fetching start times");
+        
         JsonArray startTimes = args.getAsJsonArray("startTimes");
+        
+        System.out.println(" Handler fetched start times");
+        
         startTimes.add(entry_time);
 
         JsonObject response = args;
@@ -60,7 +69,12 @@ public class Handler {
 
         response.add("startTimes", startTimes);
 
+        System.out.println(" Handler fetching comm times");
+        
         JsonArray commTimes = args.getAsJsonArray("commTimes");
+        
+        System.out.println(" Handler fetched comm times");
+        
         commTimes.add(0);
         response.add("commTimes", commTimes);
 
@@ -84,6 +98,8 @@ public class Handler {
             e.printStackTrace();
         }
 
+        System.out.println(" Handler completed");
+        
         return response;
     }
 
@@ -117,6 +133,7 @@ public class Handler {
                 "    \"imageName\": \"test.jpg\"\n" +
                 "}\n";
         JsonObject jsonArgs = new JsonParser().parse(jsonStr).getAsJsonObject();
+        System.out.println(" Handler created jsonArgs ");
         main(jsonArgs);
     }
 
