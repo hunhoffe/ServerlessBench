@@ -37,7 +37,7 @@ public class Thumbnail {
     final static float MAX_WIDTH = 250;
     final static float MAX_HEIGHT= 250;
 
-    public static JsonObject main(JsonObject args) {
+    public static JsonObject main(JsonObject args) throws Exception {
         long currentTime = System.currentTimeMillis();
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
@@ -116,7 +116,7 @@ public class Thumbnail {
         return response;
     }
 
-    public static void main (String args[]) {
+    public static void main (String args[]) throws Exception {
         String jsonStr = "{\n" +
                 "    \"extractedMetadata\": {\n" +
                 "        \"creationTime\": \"2019:10:15 14:03:39\",\n" +

@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat;
 
 public class StoreImageMetadata {
 
-    public static JsonObject main(JsonObject args) {
+    public static JsonObject main(JsonObject args) throws Exception {
         long currentTime = System.currentTimeMillis();
 
         Date date = new Date(currentTime);
@@ -96,7 +96,7 @@ public class StoreImageMetadata {
         return originalObj;
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws Exception {
         JsonObject jsonArgs = new JsonParser().parse("{\n" +
                 "    \"extractedMetadata\": {\n" +
                 "        \"creationTime\": \"2019:10:15 14:03:39\",\n" +

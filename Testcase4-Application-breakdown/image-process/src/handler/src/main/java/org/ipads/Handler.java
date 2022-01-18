@@ -27,7 +27,7 @@ public class Handler {
     final static float MAX_WIDTH = 250;
     final static float MAX_HEIGHT= 250;
 
-    public static JsonObject main(JsonObject args) {      
+    public static JsonObject main(JsonObject args) throws Exception {      
         long currentTime = System.currentTimeMillis();
         
         System.out.println(" Handler invoked");
@@ -79,7 +79,7 @@ public class Handler {
         return response;
     }
 
-    public static void main (String args[]) {
+    public static void main (String args[]) throws Exception {
         String jsonStr = "{\n" +
                 "    \"extractedMetadata\": {\n" +
                 "        \"creationTime\": \"2019:10:15 14:03:39\",\n" +

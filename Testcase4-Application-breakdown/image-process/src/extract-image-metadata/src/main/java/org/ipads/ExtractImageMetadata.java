@@ -30,7 +30,7 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 
 public class ExtractImageMetadata {
-    public static JsonObject main(JsonObject args) {
+    public static JsonObject main(JsonObject args) throws Exception {
         long currentTime = System.currentTimeMillis();
 
         System.out.println(" ExtractImageMetadata invoked");
