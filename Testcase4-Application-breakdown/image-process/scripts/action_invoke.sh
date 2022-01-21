@@ -10,12 +10,16 @@
 # PURPOSE.
 # See the Mulan PSL v1 for more details.
 #
-if [ -z "$TESTCASE4_HOME" ]; then
-    echo "$0: ERROR: TESTCASE4_HOME environment variable not set"
-    exit
+PREFIX="ok: invoked /_/imageProcessSequence with id "
+if ! output=$(wsk action invoke imageProcessSequence -i --param imageName test.jpg 2>&1); then
+    code=$?
+    echo "Failed to invoke function: $output"
+    exit -1
 fi
 
-ASSETS_DIR="$TESTCASE4_HOME/image-process/assets"
-pushd $ASSETS_DIR >/dev/null 2>&1
-wsk action invoke imageProcessSequence -i --result --param imageName test.jpg
-popd >/dev/null 2>&1
+if ! activation=${output#"$PREFIX"}; then
+    code=$?
+    echo "Failed to parse activation id from: $output"
+    exit -1
+fi
+echo $activation

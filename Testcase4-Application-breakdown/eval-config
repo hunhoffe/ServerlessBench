@@ -1,4 +1,5 @@
-concurrent_client=5
-concurrent_loop=5
+concurrent_client=2
+concurrent_loop=3
 record_num=0
-delay_sec=2
+delay_sec=.8
+test_name=test
