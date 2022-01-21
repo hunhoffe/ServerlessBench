@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import org.apache.commons.io.IOUtils;
 import org.im4java.core.Info;
+import org.im4java.core.InfoException;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -76,15 +77,16 @@ public class ExtractImageMetadata {
         } catch (CouchDbException e) {
             System.err.println("Database failure");
             e.printStackTrace();
-        }
-	long db_finish = System.currentTimeMillis();
-        long db_elapse_ms = db_finish - db_begin;
+        } finally {
+	    long db_finish = System.currentTimeMillis();
+            long db_elapse_ms = db_finish - db_begin;
+            outputStream.close();
+	}
 
         JsonArray commTimes = new JsonArray();
         commTimes.add(db_elapse_ms);
         response.add("commTimes", commTimes);
 
-	outputStream.close();
         Info imageInfo = new Info(imageName, false);
         response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
         response.add(ImageProcessCommons.EXTRACTED_METADATA, new  Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes"));
