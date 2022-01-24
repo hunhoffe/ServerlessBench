@@ -17,6 +17,7 @@ import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
 import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
@@ -106,11 +107,11 @@ public class ExtractImageMetadata {
             System.err.println("Database failure");
             e.printStackTrace();
         } finally {
-	    long db_finish = System.currentTimeMillis();
-            long db_elapse_ms = db_finish - db_begin;
             outputStream.close();
 	}
-
+	long db_finish = System.currentTimeMillis();
+        long db_elapse_ms = db_finish - db_begin;
+        
         JsonArray commTimes = new JsonArray();
         commTimes.add(db_elapse_ms);
         response.add("commTimes", commTimes);
@@ -351,7 +352,7 @@ public class ExtractImageMetadata {
         response.add("commTimes", commTimes);
 
         long endTime = System.nanoTime();
-        long executionTime = endTime - Thumbnail.LAUNCH_TIME;
+        long executionTime = endTime - ExtractImageMetadata.LAUNCH_TIME;
         response.addProperty(ImageProcessCommons.EXECUTION_TIME, executionTime);
 
         return response;
