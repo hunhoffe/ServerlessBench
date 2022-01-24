@@ -13,6 +13,7 @@ import os
 import threading
 import time
 import subprocess
+from subprocess import PIPE
 import argparse
 import json
 import sys
@@ -28,13 +29,21 @@ except Exception as e:
 def client(client_num, i, single_results, single_logs, single_errors):
     # run invoke command
     command = f"{IMAGE_PROCESS_HOME}/scripts/action_invoke.sh"
-    activation_id = subprocess.check_output(command)
-    activation_id = activation_id.decode("utf-8").strip()
+    result = subprocess.run(command, stdout=PIPE, stderr=PIPE)
+    if result.returncode != 0:
+        print(f"Client {client_num} iteration {i} failed to invoke function with returncode {result.returncode}\n")
+        single_errors[i] = result.stderr.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
+        return
+    activation_id = result.stdout.decode("utf-8").strip()
     
     # activation result
     command = f"{IMAGE_PROCESS_HOME}/scripts/get_activation.sh"
-    result = subprocess.check_output([command, activation_id])
-    result = result.decode("utf-8").strip()
+    result = subprocess.run([command, activation_id], stdout=PIPE, stderr=PIPE)
+    if result.returncode != 0:
+        print(f"Client {client_num} iteration {i} failed to fetch activation record for {activation_id} with returncode {result.returncode}\n")
+        single_errors[i] = result.stderr.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
+        return
+    result = result.stdout.decode("utf-8").strip()
 
     # Parse and record results
     parsed_result = parse_result(result)
@@ -57,7 +66,7 @@ def looping_client(client_num, results, logs, errors, num_iters, delay):
     for invoke_num in range(num_iters):
         t = threading.Thread(target=client, args=(client_num, invoke_num, single_results, single_logs, single_errors))
         threads.append(t)
-        single_results.append("")
+        single_results.append([])
         single_logs.append("")
         single_errors.append("")
 
@@ -149,18 +158,18 @@ def write_summary(sumfile, results, num_clients, num_iters, delay):
             # count errors
             if len(r) < 7:
                 err_count += 1
+            if len(r) >= 2:
+                min_start = min(r[START], min_start)
+                max_end = max(r[END], max_end)
 
-            min_start = min(r[START], min_start)
-            max_end = max(r[END], max_end)
+                # Calculate latency for each result
+                latency = r[END] - r[START]
+                latencies.append(latency)
 
-            # Calculate latency for each result
-            latency = r[END] - r[START]
-            latencies.append(latency)
-
-            # Calculate latency minus db but only for successful invocations
-            if len(r) == 7:
-                latency_no_db = latency - sum(r[DB_TIME_START:])
-                latencies_no_db.append(latency_no_db)
+                # Calculate latency minus db but only for successful invocations
+                if len(r) == 7:
+                    latency_no_db = latency - sum(r[DB_TIME_START:])
+                    latencies_no_db.append(latency_no_db)
 
     # Calculate number of requests and duration
     num_requests = float(num_clients * num_iters)
@@ -184,17 +193,18 @@ def format_summary(fh, title, num_requests, latencies, num_successful_requests, 
     for latency in latencies:
         total += latency
 
+    num_results = len(latencies)
     fh.write("\n")
     fh.write(f"------------------ {title} ---------------------\n")
     fh.write(f"{num_successful_requests} / {num_requests} requests, duration is {duration}\n")
     fh.write("latency (ms):\navg\t50%\t75%\t90%\t95%\t99%\n")
     if num_requests > 0:
-        average_latency = float(total) / num_requests
-        _50_pc_latency = latencies[int(num_requests * 0.5) - 1]
-        _75_pc_latency = latencies[int(num_requests * 0.75) - 1]
-        _90_pc_latency = latencies[int(num_requests * 0.9) - 1]
-        _95_pc_latency = latencies[int(num_requests * 0.95) - 1]
-        _99_pc_latency = latencies[int(num_requests * 0.99) - 1]
+        average_latency = float(total) / num_results
+        _50_pc_latency = latencies[int(num_results * 0.5) - 1]
+        _75_pc_latency = latencies[int(num_results * 0.75) - 1]
+        _90_pc_latency = latencies[int(num_results * 0.9) - 1]
+        _95_pc_latency = latencies[int(num_results * 0.95) - 1]
+        _99_pc_latency = latencies[int(num_results * 0.99) - 1]
         fh.write("%.2f\t%d\t%d\t%d\t%d\t%d\n" % (average_latency, _50_pc_latency, _75_pc_latency, _90_pc_latency, _95_pc_latency, _99_pc_latency))
     fh.write("throughput (n/s):\n%.2f\n" % (num_requests / (duration / 1000)))
     fh.write("goodput (n/s):\n%.2f\n" % (num_successful_requests / (duration / 1000)))

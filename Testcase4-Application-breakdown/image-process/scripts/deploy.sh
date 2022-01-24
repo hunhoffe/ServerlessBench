@@ -11,8 +11,7 @@
 # See the Mulan PSL v1 for more details.
 #
 
-TIMEOUT=30000 # 5 minutes (milliseconds)
-SEQUENCE_TIMEOUT=$(expr 5 \* $TIMEOUT) # Sequence timeout is 5 function timeouts
+TIMEOUT=60000 # 10 minutes (milliseconds)
 
 if [ -z "$TESTCASE4_HOME" ]; then
     echo "$0: ERROR: TESTCASE4_HOME environment variable not set"
@@ -45,27 +44,5 @@ wsk action update extractImageMetadata extract-image-metadata/target/extract-ima
     --param COUCHDB_URL "$couchdb_url" \
     --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
     --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
-    --param COUCHDB_DBNAME "$IMAGE_DATABASE"
- 
-wsk action update transformMetadata transform-metadata/target/transform-metadata.jar --main org.serverlessbench.TransformMetadata --docker openwhisk/java8action --timeout $TIMEOUT -i
-
-wsk action update handler handler/target/handler.jar --main org.serverlessbench.Handler --docker openwhisk/java8action --timeout $TIMEOUT -i \
-    --param COUCHDB_URL "$couchdb_url" \
-    --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
-    --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
+    --param COUCHDB_DBNAME "$IMAGE_DATABASE" \
     --param COUCHDB_LOGDB "$IMAGE_DATABASE_LOG"
-
-wsk action update thumbnail thumbnail/target/thumbnail.jar --main org.serverlessbench.Thumbnail --docker hunhoffe/java8action-imagemagic --timeout $TIMEOUT -i \
-    --param COUCHDB_URL "$couchdb_url" \
-    --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
-    --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
-    --param COUCHDB_DBNAME "$IMAGE_DATABASE"
-
-wsk action update storeImageMetadata  store-image-metadata/target/store-image-metadata.jar --main org.serverlessbench.StoreImageMetadata --docker openwhisk/java8action --timeout $TIMEOUT -i \
-    --param COUCHDB_URL "$couchdb_url" \
-    --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
-    --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \
-    --param COUCHDB_DBNAME "$IMAGE_DATABASE"
-
-wsk action update imageProcessSequence --sequence extractImageMetadata,transformMetadata,handler,thumbnail,storeImageMetadata --timeout $SEQUENCE_TIMEOUT -i
-

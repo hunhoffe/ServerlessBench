@@ -10,13 +10,12 @@
 # PURPOSE.
 # See the Mulan PSL v1 for more details.
 #
-PREFIX="ok: invoked /_/imageProcessSequence with id "
-if ! output=$(wsk action invoke imageProcessSequence -i --param imageName test.jpg 2>&1); then
+PREFIX="ok: invoked /_/extractImageMetadata with id "
+if ! output=$(wsk action invoke extractImageMetadata -i --param imageName test.jpg 2>&1); then
     code=$?
     echo "Failed to invoke function: $output"
     exit -1
 fi
-
 if ! activation=${output#"$PREFIX"}; then
     code=$?
     echo "Failed to parse activation id from: $output"

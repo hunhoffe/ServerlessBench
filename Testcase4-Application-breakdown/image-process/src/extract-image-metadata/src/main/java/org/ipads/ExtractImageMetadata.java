@@ -50,14 +50,32 @@ public class ExtractImageMetadata {
         JsonObject result = args;
         try {
             result = extractImageMetadata(result);
+	    System.out.flush();
+	    result = percolateDBInfo(args, result);
             result = transformMetadata(result);
+	    System.out.flush();
+            result = percolateDBInfo(args, result);
             result = handler(result);
+	    System.out.flush();
+            result = percolateDBInfo(args, result);
             result = thumbnail(result);
+	    System.out.flush();
+            result = percolateDBInfo(args, result);
             result = storeImageMetadata(result);
+	    System.out.flush();
         } catch (Exception e) {
             System.out.println("main function failed");
             e.printStackTrace();
         }
+        return result;
+    }
+
+    public static JsonObject percolateDBInfo(JsonObject args, JsonObject result) {
+        result.add("COUCHDB_URL", args.get("COUCHDB_URL"));
+        result.add("COUCHDB_USERNAME", args.get("COUCHDB_USERNAME"));
+        result.add("COUCHDB_PASSWORD", args.get("COUCHDB_PASSWORD"));
+        result.add("COUCHDB_DBNAME", args.get("COUCHDB_DBNAME"));
+        result.add("COUCHDB_LOGDB", args.get("COUCHDB_LOGDB"));
         return result;
     }
 
@@ -186,6 +204,8 @@ public class ExtractImageMetadata {
     public static JsonObject storeImageMetadata(JsonObject args) throws Exception {
         long currentTime = System.currentTimeMillis();
 
+        System.out.println(" StoreImageMetadata invoked");
+
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
         JsonArray startTimes = args.getAsJsonArray("startTimes");
@@ -258,6 +278,9 @@ public class ExtractImageMetadata {
 
     public static JsonObject thumbnail(JsonObject args) throws Exception {
         long currentTime = System.currentTimeMillis();
+
+	System.out.println(" Thumbnail invoked");
+
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
         JsonArray startTimes = args.getAsJsonArray("startTimes");
@@ -361,7 +384,7 @@ public class ExtractImageMetadata {
     public static JsonObject transformMetadata(JsonObject args) {
         long currentTime = System.currentTimeMillis();
 
-        System.out.println("TransformMetadata invoked");
+        System.out.println(" TransformMetadata invoked");
 
         Date date = new Date(currentTime);
         String entry_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(date.getTime());
