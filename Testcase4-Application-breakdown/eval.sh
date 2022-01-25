@@ -11,6 +11,8 @@
 # See the Mulan PSL v1 for more details.
 #
 
+set -x
+
 result=eval-result.log
 rm -f $result
 
@@ -19,11 +21,15 @@ cd $TESTCASE4_HOME
 
 function runImage() {
     echo "measuring image-process application..."
+    ./pod_counter.sh > pod_count.dat &
+    WATCHER_PID=$!
+
     cd image-process
     ./scripts/eval.sh
     cd $TESTCASE4_HOME
     echo -e "\n\n>>>>>>>> image-process <<<<<<<<\n" >> $result
     cat image-process/$result >> $result
+    kill $WATCHER_PID
 }
 
 function runAlexa() {
@@ -102,4 +108,5 @@ fi
 
 echo "serverless applications result: "
 cat $result
-
+sleep 1
+sudo killall python3.7

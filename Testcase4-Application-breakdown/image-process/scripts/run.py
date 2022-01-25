@@ -226,13 +226,12 @@ def parse_result(result):
             response = json_result['response']
             result = response['result']
             comm_times = json_result['response']['result']['commTimes']
-            sys.stdout.flush()
 
             # Check results
-            assert(len(comm_times) == 5)
-
-            # return parsed values
-            return [start, end] + comm_times
+            if len(comm_times) == 5:
+                return [start, end] + comm_times
+            else:
+                return [start, end]
 
     except:
         print(f"Could not parse results json: {json_str}")
