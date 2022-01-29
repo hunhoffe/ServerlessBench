@@ -53,44 +53,44 @@ public class ExtractImageMetadata {
         long dbEnd = 0;
         float scalingFactor = 0;
         int height, width, scaledHeight, scaledWidth;
-        String couchdbURL = None;
-        String couchdbUsername = None;
-        String couchdbPassword = None;
-        String couchdbName = None;
-        String imageName = None;
-        String thumbnailName = None;
-        Database db = None;
-        InputStream imageStream = None;
-        FileOutputStream outputStream = None;
+        String couchDBURL = null;
+        String couchDBUsername = null;
+        String couchDBPassword = null;
+        String couchDBName = null;
+        String imageName = null;
+        String thumbnailName = null;
+        Database db = null;
+        InputStream imageStream = null;
+        FileOutputStream outputStream = null;
         JsonArray commTimes = new JsonArray();
-        JsonObject extractedMetadata = None;
+        JsonObject extractedMetadata = null;
         JsonObject response = args;
         ConvertCmd cmd = new ConvertCmd();
         IMOperation op = new IMOperation();
 
         // Log start time and print start message
         System.out.println("ImageProcess invoked");
-        response.add("startTime", currentTime);
+        response.addProperty("startTime", currentTime);
 
         // Validate arguments
-        couchdbURL = args.get("COUCHDB_URL").getAsString();
-        if (couchdbURL == null || couchdbURL.isEmpty()) {
+        couchDBURL = args.get("COUCHDB_URL").getAsString();
+        if (couchDBURL == null || couchDBURL.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_URL: " + args.toString());
         }
-        couchdbUsername = args.get("COUCHDB_USERNAME").getAsString();
-        if (couchdbUsername == null || couchdbUsername.isEmpty()) {
+        couchDBUsername = args.get("COUCHDB_USERNAME").getAsString();
+        if (couchDBUsername == null || couchDBUsername.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_USERNAME: " + args.toString());
         }
-        couchdbPassword = args.get("COUCHDB_PASSWORD").getAsString();
-        if (couchdbPassword == null || couchdbPassword.isEmpty()) {
+        couchDBPassword = args.get("COUCHDB_PASSWORD").getAsString();
+        if (couchDBPassword == null || couchDBPassword.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_PASSWORD: " + args.toString());
         }
-        couchdbName = args.get("COUCHDB_DBNAME").getAsString();
-        if (couchdbName == null || couchdbName.isEmpty()) {
+        couchDBName = args.get("COUCHDB_DBNAME").getAsString();
+        if (couchDBName == null || couchDBName.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_DBNAME: " + args.toString());
         }
         imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
-        if (imageName == null || imageName.isEmtpy()) {
+        if (imageName == null || imageName.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_DBNAME: " + args.toString());
         }
         response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
@@ -100,10 +100,10 @@ public class ExtractImageMetadata {
         outputStream = new FileOutputStream(imageName);
         dbStart = System.currentTimeMillis();
         try {
-            db = ClientBuilder.url(new URL(couchdbURL))
-                    .username(couchdbUsername)
-                    .password(couchdbPassword)
-                    .build().database(couchdbName, true);
+            db = ClientBuilder.url(new URL(couchDBURL))
+                    .username(couchDBUsername)
+                    .password(couchDBPassword)
+                    .build().database(couchDBName, true);
             imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
             IOUtils.copy(imageStream, outputStream);
         } catch (CouchDbException e) {
@@ -112,9 +112,9 @@ public class ExtractImageMetadata {
         } finally {
             imageStream.close();
             outputStream.close();
-            imageStream = None;
-            outputStream = None;
-            db = None;
+            imageStream = null;
+            outputStream = null;
+            db = null;
         }
         dbEnd = System.currentTimeMillis();
         commTimes.add(dbEnd - dbStart);
@@ -122,14 +122,14 @@ public class ExtractImageMetadata {
         // Extract image information and metadata
         Info imageInfo = new Info(imageName, false);
         response.addProperty(ImageProcessCommons.IMAGE_NAME, imageName);
-        extractedMetadata = Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes");
+        extractedMetadata = new Gson().toJsonTree(imageInfo).getAsJsonObject().getAsJsonObject("iAttributes");
 
         // Transform metadata (results saved in response)
         response = transformMetadata(extractedMetadata, response);
 
         // get heighth/width and calculated scaled heighth/width
         width = response.get("width").getAsInt();
-        height = response.get("height").getAsInt()
+        height = response.get("height").getAsInt();
         scalingFactor = Math.min(
                 MAX_HEIGHT/ height,
                 MAX_WIDTH / width
@@ -147,10 +147,10 @@ public class ExtractImageMetadata {
         imageStream = new FileInputStream(thumbnailName);
         dbStart = System.currentTimeMillis();
         try {
-            db = ClientBuilder.url(new URL(couchdb_url))
-                    .username(couchdb_username)
-                    .password(couchdb_password)
-                    .build().database(couchdb_dbname, true);
+            db = ClientBuilder.url(new URL(couchDBURL))
+                    .username(couchDBUsername)
+                    .password(couchDBPassword)
+                    .build().database(couchDBName, true);
             db.saveAttachment(
                     imageStream,
                     thumbnailName,
@@ -162,22 +162,22 @@ public class ExtractImageMetadata {
             e.printStackTrace();
         } finally {
             imageStream.close();
-            imageStream = None;
-            db = None;
+            imageStream = null;
+            db = null;
         }
         dbEnd = System.currentTimeMillis();
         commTimes.add(dbEnd - dbStart);
 
         // Save end time and comm times to output
         response.add("commTimes", commTimes);
-        endTime = System.currentTimeMillis();
-        response.add("endTime", endTime);
+        currentTime = System.currentTimeMillis();
+	response.addProperty("endTime", currentTime);
         return response;
     }
 
     public static JsonObject transformMetadata(JsonObject extractedMetadata, JsonObject response) {
         // Variable declaration
-        JsonElement currentElement = None;
+        JsonElement currentElement = null;
         JsonObject geo = new JsonObject();
         JsonObject dimensions = new JsonObject();
 
@@ -192,11 +192,11 @@ public class ExtractImageMetadata {
             currentElement = parseCoordinate(
                     extractedMetadata.get("Properties:exif:GPSLatitude"),
                     extractedMetadata.get("Properties:exif:GPSLatitudeRef"));
-            geo.add("latitude", latitude);
+            geo.add("latitude", currentElement);
             currentElement = parseCoordinate(
                     extractedMetadata.get("Properties:exif:GPSLongitude"),
                     extractedMetadata.get("Properties:exif:GPSLongitudeRef"));
-            geo.add("longitude", longitude);
+            geo.add("longitude", currentElement);
             response.add("geo", geo);
         }
 
