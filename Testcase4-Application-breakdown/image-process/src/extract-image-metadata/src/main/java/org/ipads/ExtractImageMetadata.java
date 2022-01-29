@@ -12,10 +12,6 @@
 
 package org.serverlessbench;
 
-import com.cloudant.client.api.ClientBuilder;
-import com.cloudant.client.api.Database;
-import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -28,6 +24,7 @@ import org.im4java.core.IMOperation;
 import org.im4java.core.Info;
 import org.im4java.core.InfoException;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -49,46 +46,23 @@ public class ExtractImageMetadata {
     public static JsonObject main(JsonObject args) throws Exception {
         // Record start time and variable declaration
         long currentTime = System.currentTimeMillis();
-        long dbStart = 0;
-        long dbEnd = 0;
         float scalingFactor = 0;
         int height, width, scaledHeight, scaledWidth;
-        String couchDBURL = null;
-        String couchDBUsername = null;
-        String couchDBPassword = null;
-        String couchDBName = null;
         String imageName = null;
         String thumbnailName = null;
-        Database db = null;
         InputStream imageStream = null;
         FileOutputStream outputStream = null;
-        JsonArray commTimes = new JsonArray();
         JsonObject extractedMetadata = null;
+        File f = null;
+
         JsonObject response = args;
         ConvertCmd cmd = new ConvertCmd();
         IMOperation op = new IMOperation();
-
         // Log start time and print start message
         System.out.println("ImageProcess invoked");
         response.addProperty("startTime", currentTime);
 
         // Validate arguments
-        couchDBURL = args.get("COUCHDB_URL").getAsString();
-        if (couchDBURL == null || couchDBURL.isEmpty()) {
-            throw new Exception("ImageProcess: missing COUCHDB_URL: " + args.toString());
-        }
-        couchDBUsername = args.get("COUCHDB_USERNAME").getAsString();
-        if (couchDBUsername == null || couchDBUsername.isEmpty()) {
-            throw new Exception("ImageProcess: missing COUCHDB_USERNAME: " + args.toString());
-        }
-        couchDBPassword = args.get("COUCHDB_PASSWORD").getAsString();
-        if (couchDBPassword == null || couchDBPassword.isEmpty()) {
-            throw new Exception("ImageProcess: missing COUCHDB_PASSWORD: " + args.toString());
-        }
-        couchDBName = args.get("COUCHDB_DBNAME").getAsString();
-        if (couchDBName == null || couchDBName.isEmpty()) {
-            throw new Exception("ImageProcess: missing COUCHDB_DBNAME: " + args.toString());
-        }
         imageName = args.get(ImageProcessCommons.IMAGE_NAME).getAsString();
         if (imageName == null || imageName.isEmpty()) {
             throw new Exception("ImageProcess: missing COUCHDB_DBNAME: " + args.toString());
@@ -98,26 +72,10 @@ public class ExtractImageMetadata {
 
         // Fetch image data from the database and record duration
         outputStream = new FileOutputStream(imageName);
-        dbStart = System.currentTimeMillis();
-        try {
-            db = ClientBuilder.url(new URL(couchDBURL))
-                    .username(couchDBUsername)
-                    .password(couchDBPassword)
-                    .build().database(couchDBName, true);
-            imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
-            IOUtils.copy(imageStream, outputStream);
-        } catch (CouchDbException e) {
-            System.err.println("Database failure");
-            e.printStackTrace();
-        } finally {
-            imageStream.close();
-            outputStream.close();
-            imageStream = null;
-            outputStream = null;
-            db = null;
-        }
-        dbEnd = System.currentTimeMillis();
-        commTimes.add(dbEnd - dbStart);
+        imageStream = loader.getResourceAsStream("images/test.jpg");
+        IOUtils.copy(imageStream, outputStream);
+        imageStream.close();
+        outputStream.close();
 
         // Extract image information and metadata
         Info imageInfo = new Info(imageName, false);
@@ -143,35 +101,16 @@ public class ExtractImageMetadata {
         op.addImage(thumbnailName);
         cmd.run(op);
 
-        // Save thumbnail to the database
-        imageStream = new FileInputStream(thumbnailName);
-        dbStart = System.currentTimeMillis();
-        try {
-            db = ClientBuilder.url(new URL(couchDBURL))
-                    .username(couchDBUsername)
-                    .password(couchDBPassword)
-                    .build().database(couchDBName, true);
-            db.saveAttachment(
-                    imageStream,
-                    thumbnailName,
-                    response.getAsJsonObject().get("format").getAsString(),
-                    "doc-id",
-                    null);
-        } catch (CouchDbException e) {
-            System.err.println("Database failure");
-            e.printStackTrace();
-        } finally {
-            imageStream.close();
-            imageStream = null;
-            db = null;
-        }
-        dbEnd = System.currentTimeMillis();
-        commTimes.add(dbEnd - dbStart);
+        // Clean up after ourselves
+        f = new File(imageName);
+        f.delete();
+        f = new File(thumbnailName);
+        f.delete();
 
         // Save end time and comm times to output
         response.add("commTimes", commTimes);
         currentTime = System.currentTimeMillis();
-	response.addProperty("endTime", currentTime);
+	    response.addProperty("endTime", currentTime);
         return response;
     }
 
