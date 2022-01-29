@@ -108,8 +108,10 @@ public class ExtractImageMetadata {
                     .build().database(couchDBName, true);
             imageStream = db.getAttachment(ImageProcessCommons.IMAGE_DOCID, imageName);
             IOUtils.copy(imageStream, outputStream);
-        } catch (CouchDbException e) {
-            System.err.println("Database failure");
+            dbEnd = System.currentTimeMillis();
+            commTimes.add(dbEnd - dbStart);
+	} catch (CouchDbException e) {
+            System.err.println("Image Database failure");
             e.printStackTrace();
         } finally {
             imageStream.close();
@@ -118,8 +120,6 @@ public class ExtractImageMetadata {
             outputStream = null;
             db = null;
         }
-        dbEnd = System.currentTimeMillis();
-        commTimes.add(dbEnd - dbStart);
 
         // Extract image information and metadata
         Info imageInfo = new Info(imageName, false);
@@ -156,10 +156,10 @@ public class ExtractImageMetadata {
             db.saveAttachment(
                     imageStream,
                     thumbnailName,
-                    response.getAsJsonObject().get("format").getAsString(),
-                    "doc-id",
-                    null);
-        } catch (CouchDbException e) {
+                    response.getAsJsonObject().get("format").getAsString());
+            dbEnd = System.currentTimeMillis();
+            commTimes.add(dbEnd - dbStart);
+       } catch (CouchDbException e) {
             System.err.println("Database failure");
             e.printStackTrace();
         } finally {
@@ -167,8 +167,6 @@ public class ExtractImageMetadata {
             imageStream = null;
             db = null;
         }
-        dbEnd = System.currentTimeMillis();
-        commTimes.add(dbEnd - dbStart);
 
         // Clean up after ourselves
 	f = new File(imageName);
