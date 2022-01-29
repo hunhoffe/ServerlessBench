@@ -28,6 +28,7 @@ import org.im4java.core.IMOperation;
 import org.im4java.core.Info;
 import org.im4java.core.InfoException;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -62,7 +63,8 @@ public class ExtractImageMetadata {
         Database db = null;
         InputStream imageStream = null;
         FileOutputStream outputStream = null;
-        JsonArray commTimes = new JsonArray();
+        File f = null;
+	JsonArray commTimes = new JsonArray();
         JsonObject extractedMetadata = null;
         JsonObject response = args;
         ConvertCmd cmd = new ConvertCmd();
@@ -167,6 +169,12 @@ public class ExtractImageMetadata {
         }
         dbEnd = System.currentTimeMillis();
         commTimes.add(dbEnd - dbStart);
+
+        // Clean up after ourselves
+	f = new File(imageName);
+	f.delete();
+	f = new File(thumbnailName);
+	f.delete();
 
         // Save end time and comm times to output
         response.add("commTimes", commTimes);
