@@ -154,7 +154,7 @@ public class ExtractImageMetadata {
             db.saveAttachment(
                     imageStream,
                     thumbnailName,
-                    extractedMetadata.getAsJsonObject().get("format").getAsString(),
+                    response.getAsJsonObject().get("format").getAsString(),
                     "doc-id",
                     null);
         } catch (CouchDbException e) {
@@ -179,7 +179,6 @@ public class ExtractImageMetadata {
         // Variable declaration
         JsonElement currentElement = null;
         JsonObject geo = new JsonObject();
-        JsonObject dimensions = new JsonObject();
 
         // Add creation time to result
         if (extractedMetadata.has("Properties:exif:DateTimeOriginal")) {
@@ -209,10 +208,8 @@ public class ExtractImageMetadata {
         }
 
         // Add dimention information
-        dimensions.addProperty("width", Integer.valueOf(extractedMetadata.get("Width").getAsString()));
-        dimensions.addProperty("height", Integer.valueOf(extractedMetadata.get("Height").getAsString()));
-        response.add("dimensions", dimensions);
-
+        response.addProperty("width", Integer.valueOf(extractedMetadata.get("Width").getAsString()));
+        response.addProperty("height", Integer.valueOf(extractedMetadata.get("Height").getAsString()));
         response.add("fileSize", extractedMetadata.get("Filesize"));
         response.add("format", extractedMetadata.get("Mime type"));
         return response;
