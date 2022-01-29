@@ -72,8 +72,8 @@ public class ExtractImageMetadata {
 
         // Fetch image data from the database and record duration
         outputStream = new FileOutputStream(imageName);
-        imageStream = loader.getResourceAsStream("images/test.jpg");
-        IOUtils.copy(imageStream, outputStream);
+        imageStream = ExtractImageMetadata.class.getClassLoader().getResourceAsStream("images/test.jpg");
+	IOUtils.copy(imageStream, outputStream);
         imageStream.close();
         outputStream.close();
 
@@ -108,7 +108,6 @@ public class ExtractImageMetadata {
         f.delete();
 
         // Save end time and comm times to output
-        response.add("commTimes", commTimes);
         currentTime = System.currentTimeMillis();
 	    response.addProperty("endTime", currentTime);
         return response;
