@@ -23,6 +23,8 @@ function runImage() {
     echo "measuring image-process application..."
     ./pod_counter.sh > pod_count.dat &
     WATCHER_PID=$!
+    kubectl get pods -o wide --all-namespaces -o wide --watch > kube_watcher.dat &
+    KUBE_WATCHER_PID=$!
 
     cd image-process
     ./scripts/eval.sh
@@ -30,6 +32,7 @@ function runImage() {
     echo -e "\n\n>>>>>>>> image-process <<<<<<<<\n" >> $result
     cat image-process/$result >> $result
     kill $WATCHER_PID
+    kill $KUBE_WATCHER_PID
 }
 
 function runAlexa() {
@@ -108,5 +111,11 @@ fi
 
 echo "serverless applications result: "
 cat $result
-sleep 1
-sudo killall python3.7
+killall python3.7
+source eval-config
+mkdir ~/$test_name
+mv image-process/$test_name* ~/$test_name
+mv pod_count.dat ~/$test_name
+mv kube_watcher.dat ~/$test_name
+mv ~/Autopilot/RL/openwhisk ~/$test_name
+./refresh.sh
