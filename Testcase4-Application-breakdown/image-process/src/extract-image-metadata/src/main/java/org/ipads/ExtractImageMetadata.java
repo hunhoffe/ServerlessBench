@@ -15,7 +15,6 @@ package org.serverlessbench;
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.Database;
 import com.cloudant.client.org.lightcouch.CouchDbException;
-import com.cloudant.client.org.lightcouch.DocumentConflictException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -114,11 +113,24 @@ public class ExtractImageMetadata {
 	} catch (CouchDbException e) {
             System.err.println("Image Database failure");
             e.printStackTrace();
-        } finally {
-            imageStream.close();
-            outputStream.close();
-            imageStream = null;
-            outputStream = null;
+	    if (imageStream != null) { 
+                imageStream.close();
+		imageStream = null;
+	    }
+	    if (outputStream != null) {
+                outputStream.close();
+		outputStream = null;
+	    }
+            return response;
+	} finally {
+	    if (imageStream != null) { 
+                imageStream.close();
+		imageStream = null;
+	    }
+	    if (outputStream != null) {
+                outputStream.close();
+		outputStream = null;
+	    }
             db = null;
         }
 
@@ -164,16 +176,23 @@ public class ExtractImageMetadata {
             System.err.println("Database failure");
             e.printStackTrace();
         } finally {
-            imageStream.close();
-            imageStream = null;
+	    if (imageStream != null) {
+                imageStream.close();
+                imageStream = null;
+	    }
             db = null;
         }
 
         // Clean up after ourselves
-	f = new File(imageName);
-	f.delete();
-	f = new File(thumbnailName);
-	f.delete();
+	try {
+	    f = new File(imageName);
+	    f.delete();
+	    f = new File(thumbnailName);
+	    f.delete();
+        } catch (Exception e) {
+	    System.err.println("File deletion error");
+	    e.printStackTrace();
+	}
 
         // Save end time and comm times to output
         response.add("commTimes", commTimes);

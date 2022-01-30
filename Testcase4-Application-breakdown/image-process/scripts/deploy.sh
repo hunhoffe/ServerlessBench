@@ -11,7 +11,7 @@
 # See the Mulan PSL v1 for more details.
 #
 
-TIMEOUT=60000 # 10 minutes (milliseconds)
+TIMEOUT=600000 # 10 minutes (milliseconds)
 
 if [ -z "$TESTCASE4_HOME" ]; then
     echo "$0: ERROR: TESTCASE4_HOME environment variable not set"
