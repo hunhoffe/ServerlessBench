@@ -153,10 +153,13 @@ public class ExtractImageMetadata {
                     .username(couchDBUsername)
                     .password(couchDBPassword)
                     .build().database(couchDBName, true);
+            JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
             db.saveAttachment(
-                    imageStream,
-                    thumbnailName,
-                    response.getAsJsonObject().get("format").getAsString());
+	            imageStream, 
+		    thumbnailName, 
+	            extractedMetadata.getAsJsonObject().get("format").getAsString(),
+		    doc.get("_id").getAsString(),
+		    doc.get("_rev").getAsString());
             dbEnd = System.currentTimeMillis();
             commTimes.add(dbEnd - dbStart);
        } catch (CouchDbException e) {
