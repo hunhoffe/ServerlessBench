@@ -49,7 +49,7 @@ def client(client_num, i, single_results, single_logs, single_errors):
     parsed_result = parse_result(result)
     if parsed_result:
         single_results[i] = parsed_result
-        if len(parsed_result) == 7:
+        if len(parsed_result) == 2:
             single_logs[i] = result
         else:
             print(f"Client {client_num} had error for invocation {i} (activation_id={activation_id})")
@@ -156,7 +156,7 @@ def write_summary(sumfile, results, num_clients, num_iters, delay):
     for rs in results:
         for r in rs: 
             # count errors
-            if len(r) < 7:
+            if len(r) < 2:
                 err_count += 1
             if len(r) >= 2:
                 min_start = min(r[START], min_start)
@@ -165,11 +165,6 @@ def write_summary(sumfile, results, num_clients, num_iters, delay):
                 # Calculate latency for each result
                 latency = r[END] - r[START]
                 latencies.append(latency)
-
-                # Calculate latency minus db but only for successful invocations
-                if len(r) == 7:
-                    latency_no_db = latency - sum(r[DB_TIME_START:])
-                    latencies_no_db.append(latency_no_db)
 
     # Calculate number of requests and duration
     num_requests = float(num_clients * num_iters)
@@ -225,13 +220,7 @@ def parse_result(result):
         else:
             response = json_result['response']
             result = response['result']
-            comm_times = json_result['response']['result']['commTimes']
-
-            # Check results
-            if len(comm_times) == 5:
-                return [start, end] + comm_times
-            else:
-                return [start, end]
+            return [start, end]
 
     except:
         print(f"Could not parse results json: {json_str}")

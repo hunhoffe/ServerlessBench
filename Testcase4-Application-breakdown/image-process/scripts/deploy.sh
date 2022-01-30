@@ -40,7 +40,7 @@ fi
 java -cp upload-image/target/upload-image.jar org.serverlessbench.UploadImage $image test.jpg $couchdb_url $COUCHDB_USERNAME $COUCHDB_PASSWORD $IMAGE_DATABASE
 
 echo "3. uploading functions to OpenWhisk..."
-wsk action update extractImageMetadata extract-image-metadata/target/extract-image-metadata.jar --main org.serverlessbench.ExtractImageMetadata --docker hunhoffe/java8action-imagemagic --timeout $TIMEOUT -i \
+wsk action update extractImageMetadata extract-image-metadata/target/extract-image-metadata.jar --main org.serverlessbench.ExtractImageMetadata --docker hunhoffe/java8action-imagemagic-pic --timeout $TIMEOUT -i \
     --param COUCHDB_URL "$couchdb_url" \
     --param COUCHDB_USERNAME "$COUCHDB_USERNAME" \
     --param COUCHDB_PASSWORD "$COUCHDB_PASSWORD" \

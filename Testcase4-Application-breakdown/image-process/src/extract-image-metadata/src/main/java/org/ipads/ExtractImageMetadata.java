@@ -72,7 +72,9 @@ public class ExtractImageMetadata {
 
         // Fetch image data from the database and record duration
         outputStream = new FileOutputStream(imageName);
-        imageStream = ExtractImageMetadata.class.getClassLoader().getResourceAsStream("images/test.jpg");
+        imageStream = new FileInputStream("/test/test.jpg");
+	System.out.println("imageStream: " + imageStream);
+	System.out.println("outputStream: " + outputStream);
 	IOUtils.copy(imageStream, outputStream);
         imageStream.close();
         outputStream.close();
