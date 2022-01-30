@@ -32,7 +32,7 @@ def client(client_num, i, single_results, single_logs, single_errors):
     result = subprocess.run(command, stdout=PIPE, stderr=PIPE)
     if result.returncode != 0:
         print(f"Client {client_num} iteration {i} failed to invoke function with returncode {result.returncode}\n")
-        single_errors[i] = result.stderr.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
+        single_errors[i] = result.stdout.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
         return
     activation_id = result.stdout.decode("utf-8").strip()
     
@@ -41,7 +41,7 @@ def client(client_num, i, single_results, single_logs, single_errors):
     result = subprocess.run([command, activation_id], stdout=PIPE, stderr=PIPE)
     if result.returncode != 0:
         print(f"Client {client_num} iteration {i} failed to fetch activation record for {activation_id} with returncode {result.returncode}\n")
-        single_errors[i] = result.stderr.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
+        single_errors[i] = result.stdout.decode("utf-8").strip() + result.stderr.decode("utf-8").strip()
         return
     result = result.stdout.decode("utf-8").strip()
 
