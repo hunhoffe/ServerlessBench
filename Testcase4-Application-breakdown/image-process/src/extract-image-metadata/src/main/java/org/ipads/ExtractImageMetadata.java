@@ -39,7 +39,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Date;
-
+import java.util.UUID;
 
 public class ExtractImageMetadata {
     final static long LAUNCH_TIME = System.nanoTime();
@@ -69,6 +69,7 @@ public class ExtractImageMetadata {
         JsonObject response = args;
         ConvertCmd cmd = new ConvertCmd();
         IMOperation op = new IMOperation();
+        String thumbnailUUID = UUID.randomUUID().toString().replace("-", "");
 
         // Log start time and print start message
         System.out.println("ImageProcess invoked");
@@ -153,13 +154,10 @@ public class ExtractImageMetadata {
                     .username(couchDBUsername)
                     .password(couchDBPassword)
                     .build().database(couchDBName, true);
-            JsonObject doc = ImageProcessCommons.findJsonObjectFromDb(db, "doc-test");
             db.saveAttachment(
 	            imageStream, 
-		    thumbnailName, 
-	            response.get("format").getAsString(),
-		    doc.get("_id").getAsString(),
-		    doc.get("_rev").getAsString());
+		    thumbnailUUID, 
+	            response.get("format").getAsString());
             dbEnd = System.currentTimeMillis();
             commTimes.add(dbEnd - dbStart);
        } catch (CouchDbException e) {
