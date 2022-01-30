@@ -118,4 +118,4 @@ mv image-process/$test_name* ~/$test_name
 mv pod_count.dat ~/$test_name
 mv kube_watcher.dat ~/$test_name
 mv ~/Autopilot/RL/openwhisk ~/$test_name
-./refresh.sh
+./refresh_just_db.sh

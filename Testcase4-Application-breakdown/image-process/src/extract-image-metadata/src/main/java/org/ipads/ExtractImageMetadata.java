@@ -157,7 +157,7 @@ public class ExtractImageMetadata {
             db.saveAttachment(
 	            imageStream, 
 		    thumbnailName, 
-	            extractedMetadata.getAsJsonObject().get("format").getAsString(),
+	            response.get("format").getAsString(),
 		    doc.get("_id").getAsString(),
 		    doc.get("_rev").getAsString());
             dbEnd = System.currentTimeMillis();
